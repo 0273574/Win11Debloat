@@ -8,8 +8,8 @@ using Serilog;
 namespace WdrozycielIntegration
 {
     /// <summary>
-    /// Configuration manager for handling deployment configurations
-    /// Supports JSON-based configuration files with validation
+    /// Menedżer konfiguracji do obsługi konfiguracji wdrażania
+    /// Obsługuje pliki konfiguracji oparte na JSON z walidacją
     /// </summary>
     public class ConfigManager
     {
@@ -17,6 +17,9 @@ namespace WdrozycielIntegration
         private readonly string _configDirectory;
         private Dictionary<string, object> _cachedConfig;
 
+        /// <summary>
+        /// Inicjalizacja menedżera konfiguracji
+        /// </summary>
         public ConfigManager(string configDirectory = null)
         {
             _configDirectory = configDirectory ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config");
@@ -28,7 +31,7 @@ namespace WdrozycielIntegration
         }
 
         /// <summary>
-        /// Load configuration from JSON file
+        /// Załaduj konfigurację z pliku JSON
         /// </summary>
         public T LoadConfiguration<T>(string configFileName) where T : class
         {
@@ -36,27 +39,29 @@ namespace WdrozycielIntegration
             {
                 var configPath = Path.Combine(_configDirectory, configFileName);
                 
+                // Sprawdzenie czy plik konfiguracji istnieje
                 if (!File.Exists(configPath))
                 {
-                    _logger.Warning("Configuration file not found: {ConfigPath}", configPath);
+                    _logger.Warning("Plik konfiguracji nie znaleziony: {ConfigPath}", configPath);
                     return null;
                 }
 
+                // Wczytaj i zdeserializuj plik JSON
                 var json = File.ReadAllText(configPath);
                 var config = JsonConvert.DeserializeObject<T>(json);
                 
-                _logger.Information("Loaded configuration from: {ConfigPath}", configPath);
+                _logger.Information("Załadowano konfigurację z: {ConfigPath}", configPath);
                 return config;
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Error loading configuration: {ConfigFileName}", configFileName);
+                _logger.Error(ex, "Błąd podczas ładowania konfiguracji: {ConfigFileName}", configFileName);
                 return null;
             }
         }
 
         /// <summary>
-        /// Save configuration to JSON file
+        /// Zapisz konfigurację do pliku JSON
         /// </summary>
         public bool SaveConfiguration<T>(string configFileName, T config) where T : class
         {
@@ -66,19 +71,19 @@ namespace WdrozycielIntegration
                 var json = JsonConvert.SerializeObject(config, Formatting.Indented);
                 
                 File.WriteAllText(configPath, json);
-                _logger.Information("Saved configuration to: {ConfigPath}", configPath);
+                _logger.Information("Zapisano konfigurację do: {ConfigPath}", configPath);
                 
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Error saving configuration: {ConfigFileName}", configFileName);
+                _logger.Error(ex, "Błąd podczas zapisywania konfiguracji: {ConfigFileName}", configFileName);
                 return false;
             }
         }
 
         /// <summary>
-        /// Get configuration file path
+        /// Pobierz ścieżkę pliku konfiguracji
         /// </summary>
         public string GetConfigFilePath(string configFileName)
         {
@@ -86,12 +91,13 @@ namespace WdrozycielIntegration
         }
 
         /// <summary>
-        /// List all configuration files
+        /// Wylistuj wszystkie pliki konfiguracji
         /// </summary>
         public IEnumerable<string> ListConfigFiles()
         {
             try
             {
+                // Zwróć puste jeśli katalog nie istnieje
                 if (!Directory.Exists(_configDirectory))
                     return Enumerable.Empty<string>();
 
@@ -100,13 +106,13 @@ namespace WdrozycielIntegration
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Error listing configuration files");
+                _logger.Error(ex, "Błąd podczas wylistowania plików konfiguracji");
                 return Enumerable.Empty<string>();
             }
         }
 
         /// <summary>
-        /// Validate configuration structure
+        /// Zweryfikuj strukturę konfiguracji
         /// </summary>
         public ConfigValidationResult ValidateConfiguration<T>(string configFileName, T expectedStructure) where T : class
         {
@@ -116,33 +122,34 @@ namespace WdrozycielIntegration
             {
                 var config = LoadConfiguration<T>(configFileName);
                 
+                // Sprawdzenie czy konfiguracja została załadowana
                 if (config == null)
                 {
                     result.IsValid = false;
-                    result.Errors.Add($"Configuration file not found: {configFileName}");
+                    result.Errors.Add($"Plik konfiguracji nie znaleziony: {configFileName}");
                     return result;
                 }
 
-                // Additional validation can be implemented here
-                _logger.Information("Configuration validation passed: {ConfigFileName}", configFileName);
+                _logger.Information("Walidacja konfiguracji przeszła pomyślnie: {ConfigFileName}", configFileName);
             }
             catch (Exception ex)
             {
                 result.IsValid = false;
                 result.Errors.Add(ex.Message);
-                _logger.Error(ex, "Configuration validation failed: {ConfigFileName}", configFileName);
+                _logger.Error(ex, "Walidacja konfiguracji nie powiodła się: {ConfigFileName}", configFileName);
             }
 
             return result;
         }
 
         /// <summary>
-        /// Merge configurations
+        /// Scal wiele konfiguracji
         /// </summary>
         public Dictionary<string, object> MergeConfigurations(params Dictionary<string, object>[] configs)
         {
             var merged = new Dictionary<string, object>();
             
+            // Przeiteruj przez wszystkie konfiguracje i scal je
             foreach (var config in configs)
             {
                 if (config == null) continue;
@@ -153,70 +160,53 @@ namespace WdrozycielIntegration
                 }
             }
 
-            _logger.Information("Merged {Count} configuration dictionaries", configs.Length);
+            _logger.Information("Scalono {Count} słowników konfiguracyjnych", configs.Length);
             return merged;
         }
 
         /// <summary>
-        /// Create default configuration structure
+        /// Utwórz domyślną strukturę konfiguracji
         /// </summary>
         public void CreateDefaultConfigurations()
         {
             try
             {
-                // Default Deployment Profiles
+                // Domyślne profile wdrażania
                 var defaultProfiles = new List<object>
                 {
                     new
                     {
-                        name = "Minimal",
-                        description = "Minimal deployment with core applications only",
-                        priority = 1,
-                        systemSettings = new { }
-                        {
-                            telemetryEnabled = false,
-                            darkModeEnabled = true
-                        },
-                        applications = new List<object>()
+                        name = "Minimalny",
+                        description = "Minimalne wdrażanie tylko z aplikacjami podstawowymi",
+                        priority = 1
                     },
                     new
                     {
-                        name = "Standard",
-                        description = "Standard deployment with common applications",
-                        priority = 2,
-                        systemSettings = new { }
-                        {
-                            telemetryEnabled = false,
-                            darkModeEnabled = true,
-                            updatesBehavior = "delayed"
-                        },
-                        applications = new List<object>()
+                        name = "Standardowy",
+                        description = "Standardowe wdrażanie z popularnymi aplikacjami",
+                        priority = 2
                     },
                     new
                     {
-                        name = "Full",
-                        description = "Full deployment with all available applications",
-                        priority = 3,
-                        systemSettings = new { }
-                        {
-                            telemetryEnabled = false,
-                            darkModeEnabled = true,
-                            updatesBehavior = "immediate"
-                        },
-                        applications = new List<object>()
+                        name = "Pełny",
+                        description = "Pełne wdrażanie ze wszystkimi dostępnymi aplikacjami",
+                        priority = 3
                     }
                 };
 
                 SaveConfiguration("DeploymentProfiles.json", defaultProfiles);
                 
-                _logger.Information("Created default deployment profiles");
+                _logger.Information("Utworzono domyślne profile wdrażania");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Error creating default configurations");
+                _logger.Error(ex, "Błąd podczas tworzenia domyślnych konfiguracji");
             }
         }
 
+        /// <summary>
+        /// Upewnij się, że katalog konfiguracji istnieje
+        /// </summary>
         private void EnsureConfigDirectoryExists()
         {
             try
@@ -224,16 +214,19 @@ namespace WdrozycielIntegration
                 if (!Directory.Exists(_configDirectory))
                 {
                     Directory.CreateDirectory(_configDirectory);
-                    _logger.Information("Created configuration directory: {ConfigDirectory}", _configDirectory);
+                    _logger.Information("Utworzono katalog konfiguracji: {ConfigDirectory}", _configDirectory);
                 }
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Error ensuring config directory exists");
+                _logger.Error(ex, "Błąd podczas tworzenia katalogu konfiguracji");
             }
         }
     }
 
+    /// <summary>
+    /// Wynik walidacji konfiguracji
+    /// </summary>
     public class ConfigValidationResult
     {
         public bool IsValid { get; set; } = true;

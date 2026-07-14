@@ -9,8 +9,8 @@ using Serilog;
 namespace WdrozycielIntegration
 {
     /// <summary>
-    /// Advanced deployment manager integrated with Win11Debloat
-    /// Handles multi-profile configurations and deployment workflows
+    /// Zaawansowany menedżer wdrażania zintegrowany z Win11Debloat
+    /// Obsługuje wieloprofilowe konfiguracje i przepływy wdrażania
     /// </summary>
     public class DeploymentManager
     {
@@ -18,6 +18,9 @@ namespace WdrozycielIntegration
         private readonly string _configPath;
         private Dictionary<string, DeploymentProfile> _profiles;
 
+        /// <summary>
+        /// Inicjalizacja menedżera wdrażania
+        /// </summary>
         public DeploymentManager(string configPath = null)
         {
             _configPath = configPath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config");
@@ -31,7 +34,7 @@ namespace WdrozycielIntegration
         }
 
         /// <summary>
-        /// Load deployment profiles from JSON configuration
+        /// Załaduj profile wdrażania z konfiguracji JSON
         /// </summary>
         public void LoadProfiles()
         {
@@ -40,29 +43,30 @@ namespace WdrozycielIntegration
                 var profilesFile = Path.Combine(_configPath, "DeploymentProfiles.json");
                 if (!File.Exists(profilesFile))
                 {
-                    _logger.Warning("Profiles file not found: {ProfilesFile}", profilesFile);
+                    _logger.Warning("Plik profili nie znaleziony: {ProfilesFile}", profilesFile);
                     return;
                 }
 
+                // Wczytaj JSON i deserializuj do listy profili
                 var json = File.ReadAllText(profilesFile);
                 var profilesList = JsonConvert.DeserializeObject<List<DeploymentProfile>>(json);
                 
                 _profiles = profilesList?.ToDictionary(p => p.Name) ?? new Dictionary<string, DeploymentProfile>();
-                _logger.Information("Loaded {Count} deployment profiles", _profiles.Count);
+                _logger.Information("Załadowano {Count} profili wdrażania", _profiles.Count);
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Error loading deployment profiles");
+                _logger.Error(ex, "Błąd podczas ładowania profili wdrażania");
             }
         }
 
         /// <summary>
-        /// Get available deployment profiles
+        /// Pobierz dostępne profile wdrażania
         /// </summary>
         public IEnumerable<string> GetAvailableProfiles() => _profiles.Keys;
 
         /// <summary>
-        /// Get specific deployment profile
+        /// Pobierz konkretny profil wdrażania
         /// </summary>
         public DeploymentProfile GetProfile(string profileName)
         {
@@ -70,11 +74,11 @@ namespace WdrozycielIntegration
             {
                 return profile;
             }
-            throw new KeyNotFoundException($"Profile '{profileName}' not found");
+            throw new KeyNotFoundException($"Profil '{profileName}' nie znaleziony");
         }
 
         /// <summary>
-        /// Validate deployment profile configuration
+        /// Zweryfikuj konfigurację profilu wdrażania
         /// </summary>
         public ValidationResult ValidateProfile(string profileName)
         {
@@ -83,21 +87,24 @@ namespace WdrozycielIntegration
                 var profile = GetProfile(profileName);
                 var result = new ValidationResult { IsValid = true };
 
+                // Sprawdzenie nazwy profilu
                 if (string.IsNullOrWhiteSpace(profile.Name))
-                    result.AddError("Profile name cannot be empty");
+                    result.AddError("Nazwa profilu nie może być pusta");
                 
+                // Sprawdzenie aplikacji
                 if (profile.Applications == null || !profile.Applications.Any())
-                    result.AddWarning("No applications specified in profile");
+                    result.AddWarning("Brak aplikacji zdefiniowanych w profilu");
 
+                // Sprawdzenie ustawień systemowych
                 if (profile.SystemSettings == null || !profile.SystemSettings.Any())
-                    result.AddWarning("No system settings specified in profile");
+                    result.AddWarning("Brak ustawień systemowych zdefiniowanych w profilu");
 
-                _logger.Information("Validation for profile '{ProfileName}': {Valid}", profileName, result.IsValid);
+                _logger.Information("Walidacja profilu '{ProfileName}': {Valid}", profileName, result.IsValid);
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Error validating profile: {ProfileName}", profileName);
+                _logger.Error(ex, "Błąd podczas walidacji profilu: {ProfileName}", profileName);
                 return new ValidationResult 
                 { 
                     IsValid = false,
@@ -107,7 +114,7 @@ namespace WdrozycielIntegration
         }
 
         /// <summary>
-        /// Execute deployment profile
+        /// Wykonaj profil wdrażania
         /// </summary>
         public async Task<DeploymentResult> ExecuteProfile(string profileName, bool dryRun = false)
         {
@@ -115,8 +122,9 @@ namespace WdrozycielIntegration
             
             try
             {
-                _logger.Information("Starting deployment for profile: {ProfileName} (DryRun: {DryRun})", profileName, dryRun);
+                _logger.Information("Rozpoczęcie wdrażania dla profilu: {ProfileName} (DryRun: {DryRun})", profileName, dryRun);
                 
+                // Pobierz i zweryfikuj profil
                 var profile = GetProfile(profileName);
                 var validation = ValidateProfile(profileName);
                 
@@ -127,70 +135,79 @@ namespace WdrozycielIntegration
                     return result;
                 }
 
-                // Apply system settings
+                // Stosuj ustawienia systemowe
                 await ApplySystemSettings(profile, dryRun, result);
                 
-                // Deploy applications
+                // Wdrażaj aplikacje
                 await DeployApplications(profile, dryRun, result);
 
                 result.Success = true;
                 result.Timestamp = DateTime.UtcNow;
                 
-                _logger.Information("Deployment completed successfully for profile: {ProfileName}", profileName);
+                _logger.Information("Wdrażanie ukończone pomyślnie dla profilu: {ProfileName}", profileName);
             }
             catch (Exception ex)
             {
                 result.Success = false;
                 result.Errors.Add(ex.Message);
-                _logger.Error(ex, "Deployment failed for profile: {ProfileName}", profileName);
+                _logger.Error(ex, "Wdrażanie nie powiodło się dla profilu: {ProfileName}", profileName);
             }
 
             return result;
         }
 
+        /// <summary>
+        /// Zastosuj ustawienia systemowe z profilu
+        /// </summary>
         private async Task ApplySystemSettings(DeploymentProfile profile, bool dryRun, DeploymentResult result)
         {
-            _logger.Information("Applying {Count} system settings", profile.SystemSettings.Count);
+            _logger.Information("Stosowanie {Count} ustawień systemowych", profile.SystemSettings.Count);
             
             foreach (var setting in profile.SystemSettings)
             {
                 if (dryRun)
                 {
-                    _logger.Information("[DRY RUN] Would apply setting: {Setting}", setting.Key);
-                    result.AppliedSettings.Add($"[DRY RUN] {setting.Key}");
+                    _logger.Information("[SYMULACJA] Byłyby zastosowane ustawienia: {Setting}", setting.Key);
+                    result.AppliedSettings.Add($"[SYMULACJA] {setting.Key}");
                 }
                 else
                 {
-                    // Actual implementation would apply system settings
+                    // Rzeczywista implementacja byłaby tutaj
                     result.AppliedSettings.Add(setting.Key);
-                    _logger.Debug("Applied setting: {Setting} = {Value}", setting.Key, setting.Value);
+                    _logger.Debug("Zastosowano ustawienie: {Setting} = {Value}", setting.Key, setting.Value);
                 }
             }
             await Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Wdrażaj aplikacje z profilu
+        /// </summary>
         private async Task DeployApplications(DeploymentProfile profile, bool dryRun, DeploymentResult result)
         {
-            _logger.Information("Deploying {Count} applications", profile.Applications.Count);
+            _logger.Information("Wdrażanie {Count} aplikacji", profile.Applications.Count);
             
             foreach (var app in profile.Applications)
             {
                 if (dryRun)
                 {
-                    _logger.Information("[DRY RUN] Would deploy: {App}", app.Name);
-                    result.DeployedApplications.Add($"[DRY RUN] {app.Name}");
+                    _logger.Information("[SYMULACJA] Byłaby wdrożona: {App}", app.Name);
+                    result.DeployedApplications.Add($"[SYMULACJA] {app.Name}");
                 }
                 else
                 {
-                    // Actual implementation would deploy applications
+                    // Rzeczywista implementacja byłaby tutaj
                     result.DeployedApplications.Add(app.Name);
-                    _logger.Debug("Deployed application: {App} (Version: {Version})", app.Name, app.Version);
+                    _logger.Debug("Wdrożona aplikacja: {App} (Wersja: {Version})", app.Name, app.Version);
                 }
             }
             await Task.CompletedTask;
         }
     }
 
+    /// <summary>
+    /// Profil wdrażania z ustawieniami systemowymi i aplikacjami
+    /// </summary>
     public class DeploymentProfile
     {
         [JsonProperty("name")]
@@ -209,6 +226,9 @@ namespace WdrozycielIntegration
         public int Priority { get; set; } = 0;
     }
 
+    /// <summary>
+    /// Informacje o aplikacji
+    /// </summary>
     public class Application
     {
         [JsonProperty("name")]
@@ -224,6 +244,9 @@ namespace WdrozycielIntegration
         public bool Required { get; set; } = true;
     }
 
+    /// <summary>
+    /// Wynik walidacji profilu
+    /// </summary>
     public class ValidationResult
     {
         public bool IsValid { get; set; } = true;
@@ -239,6 +262,9 @@ namespace WdrozycielIntegration
         public void AddWarning(string warning) => Warnings.Add(warning);
     }
 
+    /// <summary>
+    /// Wynik wykonanego wdrażania
+    /// </summary>
     public class DeploymentResult
     {
         public string ProfileName { get; set; }
