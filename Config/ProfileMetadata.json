@@ -1,0 +1,33 @@
+{
+  "profiles": [
+    {
+      "id": "minimal",
+      "displayName": "Minimal Setup",
+      "description": "Lightweight configuration focusing on performance",
+      "icon": "⚡",
+      "tags": ["performance", "lightweight", "recommended"],
+      "estimatedTime": "15-20 minutes"
+    },
+    {
+      "id": "standard",
+      "displayName": "Standard Setup",
+      "description": "Balanced configuration with common applications",
+      "icon": "⚙️",
+      "tags": ["balanced", "standard"],
+      "estimatedTime": "30-45 minutes"
+    },
+    {
+      "id": "full",
+      "displayName": "Full Developer Setup",
+      "description": "Complete configuration for developers",
+      "icon": "🔧",
+      "tags": ["developer", "complete", "comprehensive"],
+      "estimatedTime": "60-90 minutes"
+    }
+  ],
+  "metadata": {
+    "lastUpdated": "2026-07-14",
+    "version": "2.1.0",
+    "author": "Wdrozyciel Integration"
+  }
+}

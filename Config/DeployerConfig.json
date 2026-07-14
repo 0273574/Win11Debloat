@@ -1,0 +1,28 @@
+{
+  "version": "2.1.0",
+  "integrationEnabled": true,
+  "deploymentSystem": {
+    "engineVersion": "wdrozyciel-2.1",
+    "profilesPath": "./Config/DeploymentProfiles.json",
+    "logsPath": "./Logs/Deployment",
+    "backupPath": "./Backups"
+  },
+  "systemAnalysis": {
+    "enabled": true,
+    "includeApplicationInventory": true,
+    "includeHardwareInfo": true,
+    "includePerformanceMetrics": true
+  },
+  "deployment": {
+    "dryRun": false,
+    "createRestorePoint": true,
+    "backupCurrentSettings": true,
+    "rollbackOnError": true,
+    "parallelExecution": false
+  },
+  "validation": {
+    "validateProfileBeforeExecution": true,
+    "validateSystemRequirements": true,
+    "validateApplicationAvailability": true
+  }
+}

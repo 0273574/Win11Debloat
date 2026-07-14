@@ -1,0 +1,135 @@
+[
+  {
+    "name": "Minimal",
+    "description": "Minimal deployment with core applications only - Recommended for performance",
+    "priority": 1,
+    "systemSettings": {
+      "telemetryEnabled": false,
+      "darkModeEnabled": true,
+      "updatesBehavior": "deferred",
+      "visualEffects": "disabled",
+      "animationsEnabled": false,
+      "searchIndexing": "disabled",
+      "deliveryOptimization": false
+    },
+    "applications": [
+      {
+        "name": "7-Zip",
+        "version": "latest",
+        "required": true
+      },
+      {
+        "name": "VLC Media Player",
+        "version": "latest",
+        "required": true
+      },
+      {
+        "name": "Notepad++",
+        "version": "latest",
+        "required": false
+      }
+    ]
+  },
+  {
+    "name": "Standard",
+    "description": "Standard deployment with common applications - Balanced configuration",
+    "priority": 2,
+    "systemSettings": {
+      "telemetryEnabled": false,
+      "darkModeEnabled": true,
+      "updatesBehavior": "deferred",
+      "visualEffects": "minimal",
+      "animationsEnabled": false,
+      "searchIndexing": "basic",
+      "deliveryOptimization": false,
+      "cortanaEnabled": false,
+      "gamingMode": true
+    },
+    "applications": [
+      {
+        "name": "7-Zip",
+        "version": "latest",
+        "required": true
+      },
+      {
+        "name": "VLC Media Player",
+        "version": "latest",
+        "required": true
+      },
+      {
+        "name": "Notepad++",
+        "version": "latest",
+        "required": false
+      },
+      {
+        "name": "Visual Studio Code",
+        "version": "latest",
+        "required": false
+      },
+      {
+        "name": "Git",
+        "version": "latest",
+        "required": false
+      }
+    ]
+  },
+  {
+    "name": "Full",
+    "description": "Full deployment with all available applications - Developer focused",
+    "priority": 3,
+    "systemSettings": {
+      "telemetryEnabled": false,
+      "darkModeEnabled": true,
+      "updatesBehavior": "immediate",
+      "visualEffects": "enabled",
+      "animationsEnabled": true,
+      "searchIndexing": "full",
+      "deliveryOptimization": false,
+      "cortanaEnabled": false,
+      "gamingMode": true,
+      "developerMode": true
+    },
+    "applications": [
+      {
+        "name": "7-Zip",
+        "version": "latest",
+        "required": true
+      },
+      {
+        "name": "VLC Media Player",
+        "version": "latest",
+        "required": true
+      },
+      {
+        "name": "Notepad++",
+        "version": "latest",
+        "required": false
+      },
+      {
+        "name": "Visual Studio Code",
+        "version": "latest",
+        "required": false
+      },
+      {
+        "name": "Git",
+        "version": "latest",
+        "required": false
+      },
+      {
+        "name": "Docker Desktop",
+        "version": "latest",
+        "required": false
+      },
+      {
+        "name": "Python",
+        "version": "latest",
+        "required": false
+      },
+      {
+        "name": "Node.js",
+        "version": "latest",
+        "required": false
+      }
+    ]
+  }
+]
